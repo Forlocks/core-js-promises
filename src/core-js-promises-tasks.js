@@ -18,11 +18,11 @@
  * 1    => promise that will be fulfilled
  */
 function getPromise(number) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function checkNegative(resolve, reject) {
     if (number >= 0) {
       resolve(number);
     } else {
-      reject('Negative number');
+      reject(new Error('Negative number'));
     }
   });
 }
@@ -40,11 +40,13 @@ function getPromise(number) {
  * Promise.reject('fail')     => promise that will be fulfilled with 'fail' value
  */
 function getPromiseResult(source) {
-  return source.then(() => {
-    return 'success';
-  }).catch(() => {
-    return 'fail';
-  });
+  return source
+    .then(() => {
+      return 'success';
+    })
+    .catch(() => {
+      return 'fail';
+    });
 }
 
 /**
@@ -115,14 +117,16 @@ function getAllOrNothing(promises) {
  * [Promise.resolve(1), Promise.reject(2), Promise.resolve(3)]  => Promise fulfilled with [1, null, 3]
  */
 function getAllResult(promises) {
-  return Promise.all(promises.map(async (item) => {
-    try {
-      const result = await item;
-      return result;
-    } catch {
-      return null;
-    }
-  }));
+  return Promise.all(
+    promises.map(async (item) => {
+      try {
+        const result = await item;
+        return result;
+      } catch {
+        return null;
+      }
+    })
+  );
 }
 
 /**
@@ -144,16 +148,13 @@ function getAllResult(promises) {
  * [promise1, promise4, promise3, promise2] => Promise.resolved('10403020')
  */
 async function queuPromises(promises) {
-  let result = '';
+  const result = await promises.reduce(async (acc, item) => {
+    const accumulator = await acc;
+    const value = await item;
 
-  for (let key of promises) {
-    try {
-      const value = await key;
-      result += value;
-    } catch {
-      result += '';
-    }
-  }
+    return accumulator + value;
+  }, Promise.resolve(''));
+
   return result;
 }
 
